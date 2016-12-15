@@ -5,6 +5,7 @@
 
 ###This plugin is exposed on  `/login` route
 
+
 1) Login Plugin accept a `User` model which act as a base database for managing admin user login
 2) This plugin also create a static role `admin` for `User` model which act as an admin user from rest users. 
    You can assign admin static role by  adding `adminUser` property on login plugin conf.json file.  
