@@ -144,8 +144,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 };
             }
 
-            //console.log(context);
-
             //Now check the role if the context is admin.
             Role.isInRole('admin', context, function(err, InRole) {
                 if (err) {
@@ -194,7 +192,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 };
             }
 
-            //console.log(context);
 
             //Now check the role if the context is admin.
             Role.isInRole(role, context, function(err, InRole) {
@@ -256,8 +253,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 //Now check if the logged in user is an Employee
                 User.exists(userId, function(err, exists){
                     if(err){
-                        console.log('Error occured in finding user for role of Staff.');
-                        console.log(err);
                         return reject(err);
                     }else{
                         if(exists){
@@ -322,7 +317,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             //http://stackoverflow.com/questions/28194961/is-it-possible-to-get-the-current-user-s-roles-accessible-in-a-remote-method-in
             //https://github.com/strongloop/loopback/issues/332
             var context;
-            console.log(currentContext.active.accessToken);
             try {
                 context = {
                     principalType: RoleMapping.USER,
