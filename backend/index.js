@@ -54,6 +54,10 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 isAdmin(app, currentContext, cb);
             };
 
+            Role.verifyRole = function(role, cb){
+                verifyRole(role, cb);
+            };
+
 
 
             //Now defigning a method for checking if the user exist in the role.
@@ -66,13 +70,30 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 }
             );
 
+            //Now a method for checking if the user exist in the role.
+            Role.remoteMethod(
+                'verifyRole', {
+                    accepts: {arg: 'role', type: 'string'},
+                    returns: {
+                        arg: 'isInRole',
+                        type: 'boolean'
+                    }
+                }
+            );
+
+
+
         }, //Init..
 
 
         addRole = function(Role, users){
             var i;
             //create the admin role
-            Role.create({
+            Role.findOrCreate(
+            {
+                name: 'admin'
+            },
+            {
                 name: 'admin'
             }, function(err, role) {
                 if (err){
@@ -130,22 +151,24 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 if (err) {
                     return cb(err);
                 }
-                var result = InRole;
-                //console.log(result);
-                //Now return the boolean value..
-                cb(null, result);
+
+                cb(null, InRole);
             });
         },
 
 
-        //Internal method for checking if current user in a role with the given loopback..
-        //Method to be useful fot plugins..
+        
+        /**
+         * Internal method for checking if current user in a role with the given loopback..
+         * Method to be useful fot plugins..
+         * @param role {string} role name
+         * @param callback {function(err, isInRole)}
+         */
         verifyRole = function(role, callback) {
             Role = server.models.Role;
             RoleMapping = server.models.RoleMapping;
             var currentContext = loopback.getCurrentContext();
-            var app = server;
-            isInRole(app, role, currentContext, callback);
+            isInRole(server, role, currentContext, callback);
         },
 
 
@@ -178,10 +201,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 if (err) {
                     return cb(err);
                 }
-                var result = InRole;
-                //console.log(result);
-                //Now return the boolean value..
-                cb(null, result);
+
+                cb(null, InRole);
             });
         },
 
@@ -208,7 +229,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
              
              //If a users is logged by Employee account the he is a staff.
             Role.registerResolver('staff', function(role, context, cb) {
-                
                 function reject(err) {
                     if (err) {
                         return cb(err);
@@ -220,7 +240,14 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     cb(null, true);
                 }
 
-                var userId = context.accessToken.userId;
+                var currentContext = loopback.getCurrentContext();
+                var userId = null;
+                try {
+                    userId = currentContext.active.accessToken.userId;
+                } catch (err) {
+                    userId = null;
+                }
+
                 if (!userId) {
                     return reject(); // do not allow anonymous users
                 }
@@ -242,96 +269,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     }
                 });
             });
-
-
-
-
-            //Register a role for adding an role shareFriends for finding if the current user is the shared friends user..
-            Role.registerResolver('shareFriends', function(role, context, cb) {
-                
-                function reject(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    cb(null, false);
-                }
-
-                function accept() {
-                    cb(null, true);
-                }
-
-                var userId = context.accessToken.userId;
-                if (!userId) {
-                    return reject(); // do not allow anonymous users
-                }
-
-
-                if(!context.modelId){
-                    return reject(); 
-                }
-
-                //Now find if the current  track model..has share number belonging to the login user..phone number.. 
-                context.model.findById(context.modelId, function(err, trackModel){
-                    // A: The datastore produced an error! Pass error to callback
-                    if(err) return reject(err)
-                    if(!trackModel){
-                        return reject();
-                    }
-
-
-                    if(trackModel.type === "event"){
-                        if(trackModel.isPublic === "public"){
-                            //Accept for public events..
-                            return accept();
-                        }
-                    }
-
-                    //Now check if the login customer is in sharing list....
-                    var Customer = server.models.Customer;
-
-                    Customer.findById(userId, function(err, customerModel){
-                        // A: The datastore produced an error! Pass error to callback
-                        if(err) return reject(err)
-                        if(!customerModel){
-                            return reject();
-                        }
-
-                        var phoneNumber = customerModel.phoneNumber;
-                        if(!phoneNumber){
-                            return reject();
-                        }
-
-                        //Now check..
-                        var shareFriendsList = trackModel.friends;
-                        if(!shareFriendsList){
-                            return reject();
-                        }
-
-                        if(!shareFriendsList.length){
-                            return reject();
-                        }
-
-
-                        for(var i=0; i< shareFriendsList.length; i++){
-                            var numberObj = shareFriendsList[i];
-                            
-                            if(numberObj.number === phoneNumber){
-                                //console.log("Accepted.");
-                                return accept();
-                            }
-                        }
-
-                        //console.info('Rejecting shareFriends role.', context.modelId);
-
-                        //At last ..reject..
-                        return reject();
-
-                    }); //findById Customer
-                }); //FindById Track Model
-
-                
-            }); //registerResolver.. 
-
+            
         },
 
 
@@ -343,15 +281,66 @@ module.exports = function(server, databaseObj, helper, packageObj) {
          * @param userInstanceId
          */
         addUserAdmin = function(adminRoleInstance, userInstanceId) {
-            //make users an admin
-            adminRoleInstance.principals.create({
+            adminRoleInstance.principals.count({
                 principalType: RoleMapping.USER,
                 principalId: userInstanceId
-            }, function(err, principal) {
-                if (err) {
-                    console.error('Got error while creating static admin role.',  console.error(err));
+
+            }, function(err, count){
+                if(err){
+                    console.error(err);
                 }else{
-                    console.info("Static role created successfully.");
+                    if(!count){
+                        //make users an admin
+                        adminRoleInstance.principals.create({
+                            principalType: RoleMapping.USER,
+                            principalId: userInstanceId
+                        }, function(err, principal) {
+                            if (err) {
+                                console.error('Got error while creating static admin role.',  console.error(err));
+                            }else{
+                                console.info("Static admin role created successfully.");
+                            }
+                        });
+                    }else{
+                        console.info("Static admin role updated successfully.");
+                    }
+                }
+            });
+
+        },
+
+        /**
+         * Get the authorised roles of the current logged in users..
+         * @param app
+         * @param cb {function(error, roles)}
+         */
+        getAuthorisedRoles = function(app, cb){
+            var currentContext = loopback.getCurrentContext();
+            Role = app.models.Role;
+            RoleMapping = app.models.RoleMapping;
+            //bad documentation loopback..
+            //http://stackoverflow.com/questions/28194961/is-it-possible-to-get-the-current-user-s-roles-accessible-in-a-remote-method-in
+            //https://github.com/strongloop/loopback/issues/332
+            var context;
+            console.log(currentContext.active.accessToken);
+            try {
+                context = {
+                    principalType: RoleMapping.USER,
+                    principalId: currentContext.active.accessToken.userId
+                };
+            } catch (err) {
+                console.error("Error >> User not logged in. ");
+                context = {
+                    principalType: RoleMapping.USER,
+                    principalId: null
+                };
+            }
+
+            Role.getRoles(context, function(err, roles) {
+                if(err){
+                    cb(err, null);
+                }else{
+                    cb(null, roles);
                 }
             });
         },
@@ -363,30 +352,31 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         //TODO MODIFY THIS METHOD TO CHANGE IT FROM THIS FUNCTION DYNAMICALLY
         hideRestMethods = function() {
             //Hiding all the rest endpoints except login/logout/create
+            Role = server.models.Role;
 
-            //User.disableRemoteMethod("create", true);
-            //User.disableRemoteMethod("upsert", true);
-            //User.disableRemoteMethod("updateAll", true);
-            //User.disableRemoteMethod("updateAttributes", false);
+            Role.disableRemoteMethod("create", true);
+            Role.disableRemoteMethod("upsert", true);
+            Role.disableRemoteMethod("updateAll", true);
+            Role.disableRemoteMethod("updateAttributes", false);
 
-            //User.disableRemoteMethod("find", true);
-            //User.disableRemoteMethod("findById", true);
-            //User.disableRemoteMethod("findOne", true);
+            Role.disableRemoteMethod("find", true);
+            Role.disableRemoteMethod("findById", true);
+            Role.disableRemoteMethod("findOne", true);
 
-            //User.disableRemoteMethod("deleteById", true);
+            Role.disableRemoteMethod("deleteById", true);
 
-            //User.disableRemoteMethod("confirm", true);
-            //User.disableRemoteMethod("count", true);
-            //User.disableRemoteMethod("exists", true);
-            //User.disableRemoteMethod("resetPassword", true);
+            Role.disableRemoteMethod("confirm", true);
+            Role.disableRemoteMethod("count", true);
+            Role.disableRemoteMethod("exists", true);
+            Role.disableRemoteMethod("resetPassword", true);
 
-            //User.disableRemoteMethod('__count__accessTokens', false);
-            //User.disableRemoteMethod('__create__accessTokens', false);
-            //User.disableRemoteMethod('__delete__accessTokens', false);
-            //User.disableRemoteMethod('__destroyById__accessTokens', false);
-            //User.disableRemoteMethod('__findById__accessTokens', false);
-            //User.disableRemoteMethod('__get__accessTokens', false);
-            //User.disableRemoteMethod('__updateById__accessTokens', false);
+            Role.disableRemoteMethod('__count__accessTokens', false);
+            Role.disableRemoteMethod('__create__accessTokens', false);
+            Role.disableRemoteMethod('__delete__accessTokens', false);
+            Role.disableRemoteMethod('__destroyById__accessTokens', false);
+            Role.disableRemoteMethod('__findById__accessTokens', false);
+            Role.disableRemoteMethod('__get__accessTokens', false);
+            Role.disableRemoteMethod('__updateById__accessTokens', false);
         };
 
 
@@ -396,7 +386,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         hideRestMethods: hideRestMethods,
         addUserAdmin: addUserAdmin,
         isAdmin: isAdmin,
-        verifyRole: verifyRole
+        verifyRole: verifyRole,
+        getAuthorisedRoles: getAuthorisedRoles
     };
 
 
