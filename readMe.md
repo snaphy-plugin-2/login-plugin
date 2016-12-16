@@ -7,7 +7,7 @@
 
 
 1) Login Plugin accept a `User` model which act as a base database for managing admin user login
-2) This plugin also create a static role `admin` for `User` model which act as an admin user from rest users. 
+2) This plugin also create a static role `$admin` for `User` model which act as an admin user from rest users. 
    You can assign admin static role by  adding `adminUser` property on login plugin conf.json file.  
 
 This plugin exposes several internal and external methods for uses.
@@ -47,6 +47,49 @@ This plugin exposes several internal and external methods for uses.
    * @param callback {function(err, isInRole)}
    */
   login.verifyRole(role, callback); 
+ ```
+ 
+ 
+ ####Warning: When creating an `static Role` always add role `name` and role id as same or else loopback wont be able to search. As loopback loopback search role by id.  
+ ####Example  
+ ```
+ //create the admin role
+             Role.findOrCreate(
+             {
+                 where:{
+                     id: '$admin',
+                     name: '$admin'
+                 }
+             },
+             {
+                 id: '$admin',
+                 name: '$admin'
+             }, function(err, role) {
+                 if (err){
+                     //role already exists..
+                     Role.find({
+                         id: "$admin"
+                         name: "$admin"
+                     }, function(err, roleList){
+                         if(roleList){
+                             if(roleList.length){
+                                 const role = roleList[0];
+                                 for (i = 0; i < users.length; i++) {
+                                     //Making this user an admin.
+                                     addUserAdmin(role, users[i].id);
+                                 } //for loop..
+                             }
+                         }
+ 
+                     });
+                 }else{
+                     for (i = 0; i < users.length; i++) {
+                         //Making this user an admin.
+                         addUserAdmin(role, users[i].id);
+                     } //for loop..
+                 }
+ 
+             });
  ```
  
  

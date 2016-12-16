@@ -1,6 +1,8 @@
 'use strict';
 module.exports = function(server, databaseObj, helper, packageObj) {
     const Promise = require('bluebird');
+    const adminRole = packageObj.adminRole;
+
     var adminUserModel = packageObj.adminUser,
         User = databaseObj.User,
         Role = server.models.Role,
@@ -91,15 +93,19 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             //create the admin role
             Role.findOrCreate(
             {
-                name: 'admin'
+                where:{
+                    id: adminRole,
+                    name: adminRole
+                }
             },
             {
-                name: 'admin'
+                id: adminRole,
+                name: adminRole
             }, function(err, role) {
                 if (err){
                     //role already exists..
                     Role.find({
-                        name: "admin"
+                        name: adminRole
                     }, function(err, roleList){
                         if(roleList){
                             if(roleList.length){
@@ -131,6 +137,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             //https://github.com/strongloop/loopback/issues/332
             var context;
 
+
             try {
                 context = {
                     principalType: RoleMapping.USER,
@@ -144,8 +151,10 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 };
             }
 
+
+
             //Now check the role if the context is admin.
-            Role.isInRole('admin', context, function(err, InRole) {
+            Role.isInRole(adminRole, context, function(err, InRole) {
                 if (err) {
                     return cb(err);
                 }
@@ -283,8 +292,9 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             }, function(err, count){
                 if(err){
                     console.error(err);
+
                 }else{
-                    if(!count){
+                    if(count == 0){
                         //make users an admin
                         adminRoleInstance.principals.create({
                             principalType: RoleMapping.USER,
