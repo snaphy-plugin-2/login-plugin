@@ -235,6 +235,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
              
              //If a users is logged by Employee account the he is a staff.
             Role.registerResolver('staff', function(role, context, cb) {
+
                 function reject(err) {
                     if (err) {
                         return cb(err);
