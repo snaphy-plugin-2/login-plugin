@@ -51,7 +51,7 @@ angular.module($snaphy.getModuleName())
         //Now storing previous state parameters..
         $rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from, fromParams) {
             //assign the "from" parameter to something
-            //console.log("Changing state from " + from.name);
+            //console.log("Changing state from ", from, "To", to);
             //Now storing the previously accesed paths..
             $rootScope.previousState = from;
             $rootScope.currentState = to;
@@ -73,7 +73,6 @@ angular.module($snaphy.getModuleName())
             var $state = $injector.get("$state");
             $state.go(redirectOtherWise);
         });
-
 
 
         $stateProvider

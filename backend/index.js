@@ -295,7 +295,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     console.error(err);
 
                 }else{
-                    if(count == 0){
+                    if(count === 0){
                         //make users an admin
                         adminRoleInstance.principals.create({
                             principalType: RoleMapping.USER,
