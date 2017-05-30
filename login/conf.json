@@ -8,20 +8,14 @@
     "brand": false
   },
   "routeExposure": "/login",
+  "adminRole": "admin",
   "adminUser": [
     {
-      "username": "snaphy2016",
-      "email": "robinskumar@gmail.com",
-      "password": "snaphy_12345",
-      "firstName": "Robins",
-      "lastName": "Gupta"
-    },
-    {
-      "username": "danzFoods",
-      "email": "admin@danzfoods.com",
-      "password": "admin@12345",
-      "firstName": "Admin",
-      "lastName": "DanzFoods"
+      "username": "test",
+      "email": "testuser@gmail.com",
+      "password": "12345",
+      "firstName": "Test",
+      "lastName": "User"
     }
   ],
   "pluginDependencies": {
