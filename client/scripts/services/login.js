@@ -5,13 +5,13 @@
 var loginState        = $snaphy.loadSettings('login', "loginState");
 var registerState     = $snaphy.loadSettings('login', "registerState");
 var forgotPassState   = $snaphy.loadSettings('login', "forgotPassState");
-
+var LOGOUT_EVENT      = $snaphy.loadSettings('login', "logout_event_name");
 
 angular.module($snaphy.getModuleName())
     //Define your services here..
     //Service for implementing login related functionality..
-    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector',
-        function(Database, $location, LoopBackAuth, $injector) {
+    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope',
+        function(Database, $location, LoopBackAuth, $injector, $rootScope) {
             //Set redirect otherwise state name..
             //First use the value from the route/login global routeOtherWise value ....
             var redirectOtherWise_ = redirectOtherWise || 'dashboard';
@@ -97,6 +97,7 @@ angular.module($snaphy.getModuleName())
              * For logging out
              */
             var logout = function() {
+
                 UserService.logout(
                     //Successs
                     function() {
@@ -110,6 +111,7 @@ angular.module($snaphy.getModuleName())
                         LoopBackAuth.clearUser();
                         LoopBackAuth.clearStorage();
                     });
+                $rootScope.$broadcast(LOGOUT_EVENT, {});
             };
 
 
