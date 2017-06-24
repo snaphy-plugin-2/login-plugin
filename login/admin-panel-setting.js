@@ -17,8 +17,40 @@ var settings = {
   "registerState": "register",
   "forgotPassState": "forgotPass",
   "adminRole": 'admin',
-  "employeeRole": "employee"
-
+  "employeeRole": "employee",
+  //Accept username as login or email
+  "accept":{
+      "login": "email"
+  },
+  validations:{
+      "rules":{
+          'login-username': {
+              required: true,
+              minlength: 3
+          },
+          'login-email': {
+              required: true,
+              email: true
+          },
+          'login-password': {
+              required: true,
+              minlength: 5
+          }
+      },
+      "messages":{
+          'login-username': {
+              required: 'Please enter a username',
+              minlength: 'Your username must consist of at least 3 characters'
+          },
+          'login-email': {
+              required: "Email is required",
+              email: "Email must be valid"
+          },
+          'login-password': {
+              required: 'Please provide a password',
+              minlength: 'Your password must be at least 5 characters long'
+          }
+      }
 };
 
 
