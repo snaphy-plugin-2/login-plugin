@@ -24,6 +24,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     addRole(Role, users);
                 })
                 .catch(function(err) {
+                    console.error(err);
                     console.info("Login throw error while adding role.\n");
                     var where = {};
                     where.or = [];
