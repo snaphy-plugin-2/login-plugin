@@ -48,8 +48,8 @@ angular.module($snaphy.getModuleName())
                     enableButton();
                     $scope.loginError = false;
                     //Add user detail to the database..
-                    LoginServices.addUserDetail().set(userDetail.user);
-                    LoginServices.addUserDetail().get()
+                    LoginServices.addUserDetail.set(userDetail.user);
+                    LoginServices.addUserDetail.get()
                         .then(function (user) {
                             var $state = $injector.get('$state'),
                                 redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
