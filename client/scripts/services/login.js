@@ -10,8 +10,8 @@ var LOGOUT_EVENT      = $snaphy.loadSettings('login', "logout_event_name");
 angular.module($snaphy.getModuleName())
     //Define your services here..
     //Service for implementing login related functionality..
-    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope',
-        function(Database, $location, LoopBackAuth, $injector, $rootScope) {
+    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope', "$q",
+        function(Database, $location, LoopBackAuth, $injector, $rootScope, $q) {
             //Set redirect otherwise state name..
             //First use the value from the route/login global routeOtherWise value ....
             var redirectOtherWise_ = redirectOtherWise || 'dashboard';
@@ -61,9 +61,43 @@ angular.module($snaphy.getModuleName())
             };
 
 
-            var addUserDetail = function(user){
+            /*var addUserDetail = function(user){
                 userDetail = user;
             };
+*/
+
+            /**
+             * Creating memoization method for storing user details....
+             * @type {{get, set}}
+             */
+            var addUserDetail = (function(){
+                var user;
+                return {
+                    /**
+                     * Get the user. Returns promise object.
+                     * @returns {Promise}
+                     */
+                    get: function(){
+                        return $q(function(resolve, reject){
+                            if(user){
+                                resolve(user);
+                            }else{
+                                UserService.getCurrent(function(userObj){
+                                    //Adding user detail to userService..
+                                    addUserDetail.set(userObj);
+                                    resolve(userObj);
+                                }, function(err){
+                                    reject(err);
+                                });
+                            }
+                        });
+                    },
+                    set: function(userObj){
+                        user = userObj;
+                    }
+                };
+            })();
+
 
 
 

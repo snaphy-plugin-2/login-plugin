@@ -48,11 +48,19 @@ angular.module($snaphy.getModuleName())
                     enableButton();
                     $scope.loginError = false;
                     //Add user detail to the database..
-                    LoginServices.addUserDetail(userDetail.user);
-                    var $state = $injector.get('$state'),
-                        redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
-                    //Redirect to the default State..
-                    $state.go(redirectTo);
+                    LoginServices.addUserDetail().set(userDetail.user);
+                    LoginServices.addUserDetail().get()
+                        .then(function (user) {
+                            var $state = $injector.get('$state'),
+                                redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
+                            //Redirect to the default State..
+                            $state.go(redirectTo);
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
+
+
 
                 },function(){
                     enableButton();
@@ -60,8 +68,6 @@ angular.module($snaphy.getModuleName())
                     //Display login error..
                     $scope.loginError = true;
                 });
-
-
             }
 
 
