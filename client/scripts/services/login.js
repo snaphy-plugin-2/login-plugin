@@ -18,6 +18,7 @@ angular.module($snaphy.getModuleName())
 
             //get the user service..
             var UserService = Database.getDb('login', 'User'),
+            SnaphyACL = Database.getDb('login', 'SnaphyACl'),
             //UserDetail is an object will contain the current logged user info.
             userDetail = null;
 
@@ -67,11 +68,13 @@ angular.module($snaphy.getModuleName())
 */
 
             /**
-             * Creating memoization method for storing user details....
-             * @type {{get, set}}
+             *  Creating memoization method for storing user details....
+             * @type {{get, getRoles, getACl, set, setRoles, setAcl}}
              */
             var addUserDetail = (function(){
                 var user;
+                var roles;
+                var aclListObj = {};
                 return {
                     /**
                      * Get the user. Returns promise object.
@@ -85,15 +88,76 @@ angular.module($snaphy.getModuleName())
                                 UserService.getCurrent(function(userObj){
                                     //Adding user detail to userService..
                                     addUserDetail.set(userObj);
-                                    resolve(userObj);
+                                    addUserDetail.getRoles()
+                                        .then(function () {
+                                            resolve(userObj);
+                                        })
+                                        .catch(function (error) {
+                                            reject(error);
+                                        });
+
                                 }, function(err){
                                     reject(err);
                                 });
                             }
                         });
                     },
+                    getRoles: function () {
+                        return $q(function (resolve, reject) {
+                            if(roles){
+                                resolve(roles);
+                            }else{
+                                UserService.getAuthorisedRoles(function (rolesList) {
+                                    addUserDetail.setRoles(rolesList);
+                                    resolve(rolesList);
+                                }, function (err) {
+                                    reject(err);
+                                });
+                            }
+                        })
+                    },
+                    getACl: function () {
+                        return $q(function (resolve, reject) {
+                            if(aclListObj){
+                                resolve(aclListObj);
+                            }else{
+                                if(roles){
+                                    if(roles.length){
+                                        SnaphyACL.find({
+                                            filter:{
+                                                where:{
+                                                    role:{
+                                                        inq: roles
+                                                    }
+                                                }
+                                            }
+                                        }, function (aclObjList) {
+                                            aclListObj = {};
+                                            if(aclObjList){
+                                                if(aclObjList.length){
+                                                    aclObjList.forEach(function (acl) {
+                                                       aclListObj[acl.model] = acl;
+                                                    });
+                                                }
+                                            }
+                                            addUserDetail.setAcl(aclListObj);
+                                            resolve(aclListObj)
+                                        }, function (error) {
+                                            reject(error);
+                                        });
+                                    }
+                                }
+                            }
+                        })
+                    },
                     set: function(userObj){
                         user = userObj;
+                    },
+                    setRoles: function (roleList) {
+                        roles = roleList;
+                    },
+                    setAcl: function (acl) {
+                        aclListObj = acl;
                     }
                 };
             })();

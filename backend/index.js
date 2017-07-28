@@ -61,6 +61,11 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 verifyRole(role, cb);
             };
 
+            //Used to fetch the authorised roles for the users..
+            User.getAuthorisedRoles = function (cb) {
+              getAuthorisedRoles(app, cb);
+            };
+
 
 
             //Now defigning a method for checking if the user exist in the role.
@@ -69,6 +74,18 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     returns: {
                         arg: 'isAdmin',
                         type: 'boolean'
+                    }
+                }
+            );
+
+
+            //Now a method for checking if the user exist in the role.
+            User.remoteMethod(
+                'getAuthorisedRoles', {
+                    accepts: {},
+                    returns: {
+                        arg: 'roles',
+                        type: ['string']
                     }
                 }
             );
