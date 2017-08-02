@@ -18,7 +18,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                  * ADMIN -> STATIC ROLE DECLARATION.
                  * STAFF -> DYNAMIC ROLE DECLARATION.
                  */
-                console.log("Adding users", adminUserModel);
+                console.log("Adding users", User.create);
                 User.find({})
                     .then(function (data) {
                         console.log("Found", data);
@@ -26,36 +26,40 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                     .catch(function (error) {
                         console.log(error);
                     });
-                //Now adding user to the method..
-                User.create(adminUserModel)
-                    .then(function(users) {
-                        console.log("User Added", users);
-                        //Now add role..
-                        addRole(Role, users);
-                    })
-                    .catch(function(err) {
-                        console.error(err);
-                        console.info("Login throw error while adding role.\n");
-                        var where = {};
-                        where.or = [];
-                        for (var i = 0; i < adminUserModel.length; i++) {
-                            var model = adminUserModel[i];
-                            where.or.push({
-                                email: model.email
-                            });
-                        }
-                        User.find({
-                            where: where
-                        }, function(err, users) {
-                            if(!err){
-                                if (users.length) {
-                                    //Now add role..
-                                    addRole(Role, users);
-                                }
+                setTimeout(function () {
+                    const Employee = server.models["Employee"];
+                    //Now adding user to the method..
+                    Employee.create(adminUserModel)
+                        .then(function(users) {
+                            console.log("User Added", users);
+                            //Now add role..
+                            addRole(Role, users);
+                        })
+                        .catch(function(err) {
+                            console.error(err);
+                            console.info("Login throw error while adding role.\n");
+                            var where = {};
+                            where.or = [];
+                            for (var i = 0; i < adminUserModel.length; i++) {
+                                var model = adminUserModel[i];
+                                where.or.push({
+                                    email: model.email
+                                });
                             }
+                            User.find({
+                                where: where
+                            }, function(err, users) {
+                                if(!err){
+                                    if (users.length) {
+                                        //Now add role..
+                                        addRole(Role, users);
+                                    }
+                                }
 
+                            });
                         });
-                    });
+
+                }, 200);
 
                 //TODO MODIFY THIS METHOD TO PROVIDE RUNTIME ACCESS AND MODIFICATION TO USER.
                 addStaffResolver();
