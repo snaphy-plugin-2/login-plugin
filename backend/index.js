@@ -1,6 +1,7 @@
 'use strict';
 module.exports = function(server, databaseObj, helper, packageObj) {
     const Promise = require('bluebird');
+    const process = require('process');
     const adminRole = packageObj.adminRole;
 
     var adminUserModel = packageObj.adminUser,
@@ -11,82 +12,81 @@ module.exports = function(server, databaseObj, helper, packageObj) {
 
         //Create an init method to be executed when the plugin get run for the first time..in memory..
         init = function() {
-            /**
-             * Permission levels
-             * ADMIN -> STATIC ROLE DECLARATION.
-             * STAFF -> DYNAMIC ROLE DECLARATION.
-             */
-            console.log("Adding users", adminUserModel);
-            //Now adding user to the method..
-            User.create(adminUserModel)
-                .then(function(users) {
-                    console.log("User Added", users);
-                    //Now add role..
-                    addRole(Role, users);
-                })
-                .catch(function(err) {
-                    console.error(err);
-                    console.info("Login throw error while adding role.\n");
-                    var where = {};
-                    where.or = [];
-                    for (var i = 0; i < adminUserModel.length; i++) {
-                        var model = adminUserModel[i];
-                        where.or.push({
-                            email: model.email
-                        });
-                    }
-                    User.find({
-                        where: where
-                    }, function(err, users) {
-                        if(!err){
-                            if (users.length) {
-                                //Now add role..
-                                addRole(Role, users);
-                            }
+            process.nextTick(function () {
+                /**
+                 * Permission levels
+                 * ADMIN -> STATIC ROLE DECLARATION.
+                 * STAFF -> DYNAMIC ROLE DECLARATION.
+                 */
+                console.log("Adding users", adminUserModel);
+                //Now adding user to the method..
+                User.create(adminUserModel)
+                    .then(function(users) {
+                        console.log("User Added", users);
+                        //Now add role..
+                        addRole(Role, users);
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        console.info("Login throw error while adding role.\n");
+                        var where = {};
+                        where.or = [];
+                        for (var i = 0; i < adminUserModel.length; i++) {
+                            var model = adminUserModel[i];
+                            where.or.push({
+                                email: model.email
+                            });
                         }
+                        User.find({
+                            where: where
+                        }, function(err, users) {
+                            if(!err){
+                                if (users.length) {
+                                    //Now add role..
+                                    addRole(Role, users);
+                                }
+                            }
 
+                        });
                     });
-                });
 
-            //TODO MODIFY THIS METHOD TO PROVIDE RUNTIME ACCESS AND MODIFICATION TO USER.
-            addStaffResolver();
-            hideRestMethods();
+                //TODO MODIFY THIS METHOD TO PROVIDE RUNTIME ACCESS AND MODIFICATION TO USER.
+                addStaffResolver();
+                hideRestMethods();
 
-            User.isAdmin = function(cb) {
-                var currentContext = loopback.getCurrentContext();
-                var app = this.app;
-                isAdmin(app, currentContext, cb);
-            };
+                User.isAdmin = function(cb) {
+                    var currentContext = loopback.getCurrentContext();
+                    var app = this.app;
+                    isAdmin(app, currentContext, cb);
+                };
 
-            Role.verifyRole = function(role, cb){
-                verifyRole(role, cb);
-            };
-
+                Role.verifyRole = function(role, cb){
+                    verifyRole(role, cb);
+                };
 
 
-            //Now defigning a method for checking if the user exist in the role.
-            User.remoteMethod(
-                'isAdmin', {
-                    returns: {
-                        arg: 'isAdmin',
-                        type: 'boolean'
+
+                //Now defigning a method for checking if the user exist in the role.
+                User.remoteMethod(
+                    'isAdmin', {
+                        returns: {
+                            arg: 'isAdmin',
+                            type: 'boolean'
+                        }
                     }
-                }
-            );
+                );
 
-            //Now a method for checking if the user exist in the role.
-            Role.remoteMethod(
-                'verifyRole', {
-                    accepts: {arg: 'role', type: 'string'},
-                    returns: {
-                        arg: 'isInRole',
-                        type: 'boolean'
+                //Now a method for checking if the user exist in the role.
+                Role.remoteMethod(
+                    'verifyRole', {
+                        accepts: {arg: 'role', type: 'string'},
+                        returns: {
+                            arg: 'isInRole',
+                            type: 'boolean'
+                        }
                     }
-                }
-            );
-
-
-
+                );
+            });
         }, //Init..
 
 
