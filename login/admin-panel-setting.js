@@ -23,8 +23,8 @@ var settings = {
   "accept":{
       "login": "username"
   },
-  validations:{
-      "rules":{
+  validations: {
+      "rules": {
           'login-username': {
               required: true,
               minlength: 3
@@ -38,7 +38,7 @@ var settings = {
               minlength: 5
           }
       },
-      "messages":{
+      "messages": {
           'login-username': {
               required: 'Please enter a username',
               minlength: 'Your username must consist of at least 3 characters'
@@ -52,6 +52,7 @@ var settings = {
               minlength: 'Your password must be at least 5 characters long'
           }
       }
+  }
 };
 
 
