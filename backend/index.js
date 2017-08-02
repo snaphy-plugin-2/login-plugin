@@ -19,6 +19,13 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                  * STAFF -> DYNAMIC ROLE DECLARATION.
                  */
                 console.log("Adding users", adminUserModel);
+                User.find({})
+                    .then(function (data) {
+                        console.log("Found", data);
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
                 //Now adding user to the method..
                 User.create(adminUserModel)
                     .then(function(users) {
