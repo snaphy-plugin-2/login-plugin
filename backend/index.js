@@ -16,10 +16,11 @@ module.exports = function(server, databaseObj, helper, packageObj) {
              * ADMIN -> STATIC ROLE DECLARATION.
              * STAFF -> DYNAMIC ROLE DECLARATION.
              */
+            console.log("Adding users", adminUserModel);
             //Now adding user to the method..
             User.create(adminUserModel)
-                .then(function(err, users) {
-                    if (err) throw err;
+                .then(function(users) {
+                    console.log("User Added", users);
                     //Now add role..
                     addRole(Role, users);
                 })
