@@ -78,6 +78,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             );
 
 
+
             //Now a method for checking if the user exist in the role.
             User.remoteMethod(
                 'getAuthorisedRoles', {
@@ -415,6 +416,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
 
         },
 
+
+
         //handle login hook add signed cookie to users..
         handleLoginHook = (function () {
             // on login set access_token cookie with same ttl as loopback's accessToken
@@ -433,6 +436,9 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 return next();
             });
         })(),
+
+
+
 
 
 
