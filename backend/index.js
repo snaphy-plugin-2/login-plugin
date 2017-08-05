@@ -367,6 +367,75 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         },
 
 
+        /**
+         * Get the roles of the current logged in users..
+         * @param app
+         * @param req
+         * @param cb {function(error, roles)}
+         */
+        getRoles = function(app, req, cb){
+            if(req){
+                if(req.accessToken){
+                    if(req.accessToken.userId){
+                        Role = app.models.Role;
+                        RoleMapping = app.models.RoleMapping;
+                        //bad documentation loopback..
+                        //http://stackoverflow.com/questions/28194961/is-it-possible-to-get-the-current-user-s-roles-accessible-in-a-remote-method-in
+                        //https://github.com/strongloop/loopback/issues/332
+                        var context;
+                        try {
+                            context = {
+                                principalType: RoleMapping.USER,
+                                principalId: req.accessToken.userId
+                            };
+                        } catch (err) {
+                            console.error("Error >> User not logged in. ");
+                            context = {
+                                principalType: RoleMapping.USER,
+                                principalId: null
+                            };
+                        }
+
+                        Role.getRoles(context, function(err, roles) {
+                            if(err){
+                                cb(err, null);
+                            }else{
+                                cb(null, roles);
+                            }
+                        });
+                    }else{
+                        cb(new Error("Request is required"));
+                    }
+                }else{
+                    cb(new Error("Request is required"));
+                }
+            }else{
+                cb(new Error("Request is required"));
+            }
+
+        },
+
+        //handle login hook add signed cookie to users..
+        handleLoginHook = (function () {
+            // on login set access_token cookie with same ttl as loopback's accessToken
+            databaseObj.User.afterRemote('login', function setLoginCookie(context, accessToken, next) {
+                var res = context.res;
+                var req = context.req;
+                if (accessToken != null) {
+                    if (accessToken.id != null) {
+                        res.cookie('access_token', accessToken.id, {
+                            signed: req.signedCookies ? true : false,
+                            maxAge: 1000 * accessToken.ttl
+                        });
+                        //return res.redirect('/');
+                    }
+                }
+                return next();
+            });
+        })(),
+
+
+
 
 
 
@@ -408,7 +477,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         addUserAdmin: addUserAdmin,
         isAdmin: isAdmin,
         verifyRole: verifyRole,
-        getAuthorisedRoles: getAuthorisedRoles
+        getAuthorisedRoles: getAuthorisedRoles,
+        getRoles: getRoles
     };
 
 
