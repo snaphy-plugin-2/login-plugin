@@ -6,19 +6,20 @@ var loginState        = $snaphy.loadSettings('login', "loginState");
 var registerState     = $snaphy.loadSettings('login', "registerState");
 var forgotPassState   = $snaphy.loadSettings('login', "forgotPassState");
 var LOGOUT_EVENT      = $snaphy.loadSettings('login', "logout_event_name");
+var LOGIN_EVENT       = $snaphy.loadSettings('login', "login_event_name");
 
 angular.module($snaphy.getModuleName())
     //Define your services here..
     //Service for implementing login related functionality..
-    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope', "$q",
-        function(Database, $location, LoopBackAuth, $injector, $rootScope, $q) {
+    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope', "$q", "$state",
+        function(Database, $location, LoopBackAuth, $injector, $rootScope, $q, $state) {
             //Set redirect otherwise state name..
             //First use the value from the route/login global routeOtherWise value ....
             var redirectOtherWise_ = redirectOtherWise || 'dashboard';
 
             //get the user service..
             var UserService = Database.getDb('login', 'User'),
-            SnaphyACL = Database.getDb('login', 'SnaphyACl'),
+            SnaphyACL = Database.getDb('login', 'SnaphyACL'),
             //UserDetail is an object will contain the current logged user info.
             userDetail = null;
 
@@ -107,9 +108,21 @@ angular.module($snaphy.getModuleName())
                             if(roles){
                                 resolve(roles);
                             }else{
-                                UserService.getAuthorisedRoles(function (rolesList) {
-                                    addUserDetail.setRoles(rolesList);
-                                    resolve(rolesList);
+                                UserService.getAuthorisedRoles({}, {}, function (rolesList) {
+                                    if(rolesList){
+                                        if(rolesList.roles.length){
+                                            addUserDetail.setRoles(rolesList.roles);
+                                            resolve(rolesList.roles);
+                                        }else{
+                                            addUserDetail.setRoles(null);
+                                            resolve(null);
+                                        }
+
+                                    }else {
+                                        addUserDetail.setRoles(null);
+                                        resolve(null);
+                                    }
+
                                 }, function (err) {
                                     reject(err);
                                 });
@@ -118,36 +131,41 @@ angular.module($snaphy.getModuleName())
                     },
                     getACl: function () {
                         return $q(function (resolve, reject) {
-                            if(aclListObj){
-                                resolve(aclListObj);
-                            }else{
-                                if(roles){
-                                    if(roles.length){
-                                        SnaphyACL.find({
-                                            filter:{
-                                                where:{
-                                                    role:{
-                                                        inq: roles
+                            addUserDetail.getRoles()
+                                .then(function (rolesList) {
+
+                                    if(rolesList){
+                                        if(rolesList.length){
+                                            SnaphyACL.find({
+                                                filter:{
+                                                    where:{
+                                                        role:{
+                                                            inq: rolesList
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }, function (aclObjList) {
-                                            aclListObj = {};
-                                            if(aclObjList){
-                                                if(aclObjList.length){
-                                                    aclObjList.forEach(function (acl) {
-                                                       aclListObj[acl.model] = acl;
-                                                    });
+                                            }, function (aclObjList) {
+                                                aclListObj = {};
+                                                if(aclObjList){
+                                                    if(aclObjList.length){
+                                                        aclObjList.forEach(function (acl) {
+                                                            aclListObj[acl.model] = acl;
+                                                        });
+                                                    }
                                                 }
-                                            }
-                                            addUserDetail.setAcl(aclListObj);
-                                            resolve(aclListObj)
-                                        }, function (error) {
-                                            reject(error);
-                                        });
+                                                addUserDetail.setAcl(aclListObj);
+                                                resolve(aclListObj)
+                                            }, function (error) {
+                                                reject(error);
+                                            });
+                                        }
                                     }
-                                }
-                            }
+                                })
+                                .catch(function (error) {
+                                    console.error(error);
+                                    reject(error);
+                                });
+
                         })
                     },
                     set: function(userObj){
@@ -161,6 +179,8 @@ angular.module($snaphy.getModuleName())
                     }
                 };
             })();
+
+
 
 
 
@@ -191,6 +211,39 @@ angular.module($snaphy.getModuleName())
 
 
 
+            var login = function(loginForm, credentials){
+                return $q(function (resolve, reject) {
+                    if(!loginForm.validate()){
+                        reject("Please login by providing the correct data.");
+                    }
+                    if(loginForm.$valid){
+                        //Now login to the employee ..
+                        UserService.login(credentials, function(userDetail){
+                            //Add user detail to the database..
+                            addUserDetail.set(userDetail.user);
+                            addUserDetail.get()
+                                .then(function (user) {
+                                    if(LOGIN_EVENT){
+                                        $rootScope.$broadcast(LOGIN_EVENT, user);
+                                    }
+
+                                    resolve(user);
+                                })
+                                .catch(function (error) {
+                                    reject(error);
+                                });
+                        },function(){
+                            reject("Please login by providing correct username and password.");
+                        });
+                    }else{
+                        reject("Please login by providing the correct data.");
+                    }
+                });
+            };
+
+
+
+
             /**
              * For logging out
              */
@@ -209,7 +262,10 @@ angular.module($snaphy.getModuleName())
                         LoopBackAuth.clearUser();
                         LoopBackAuth.clearStorage();
                     });
-                $rootScope.$broadcast(LOGOUT_EVENT, {});
+                if(LOGOUT_EVENT){
+                    $rootScope.$broadcast(LOGOUT_EVENT, {});
+                }
+
             };
 
 
@@ -218,6 +274,7 @@ angular.module($snaphy.getModuleName())
                 authenticatePage: authenticatePage,
                 getLoggedDetails: getLoggedDetails,
                 logout: logout,
+                login: login,
                 userDetail: userDetail,
                 redirectOtherWise: redirectOtherWise_,
                 isAdmin: isAdmin,

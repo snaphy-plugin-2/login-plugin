@@ -34,44 +34,26 @@ angular.module($snaphy.getModuleName())
 
         //Enable the login button at first..
         enableButton();
-        $scope.login = function(loginForm){
-            if(!loginForm.validate()){
-                $scope.errorMsg = "Please login by providing the correct data.";
-                //Display login error..
-                $scope.loginError = true;
-                return null;
-            }
-            if(loginForm.$valid){
-                disableButton();
-                //Now login to the employee ..
-                UserService.login($scope.credentials, function(userDetail){
-                    enableButton();
+        $scope.login = function (loginForm) {
+            disableButton();
+            LoginServices.login(loginForm, $scope.credentials)
+                .then(function (user) {
                     $scope.loginError = false;
-                    //Add user detail to the database..
-                    LoginServices.addUserDetail.set(userDetail.user);
-                    LoginServices.addUserDetail.get()
-                        .then(function (user) {
-                            var $state = $injector.get('$state'),
-                                redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
-                            //Redirect to the default State..
-                            $state.go(redirectTo);
-                        })
-                        .catch(function (error) {
-                            console.error(error);
-                        });
-
-
-
-                },function(){
+                    var $state = $injector.get('$state'),
+                        redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
+                    //Now reload the page after successfull login..
+                    window.location.replace("/");
+                    //Redirect to the default State..
+                    //$state.go(redirectTo);
+                })
+                .catch(function (error) {
                     enableButton();
                     $scope.errorMsg = "Please login by providing correct username and password.";
                     //Display login error..
                     $scope.loginError = true;
                 });
-            }
+        };
 
-
-        }; //login function
 
     }//controller function..
 ]);
