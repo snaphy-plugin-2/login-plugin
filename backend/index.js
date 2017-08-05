@@ -418,31 +418,6 @@ module.exports = function(server, databaseObj, helper, packageObj) {
 
 
 
-        //handle login hook add signed cookie to users..
-        handleLoginHook = (function () {
-            // on login set access_token cookie with same ttl as loopback's accessToken
-            databaseObj.User.afterRemote('login', function setLoginCookie(context, accessToken, next) {
-                var res = context.res;
-                var req = context.req;
-                if (accessToken != null) {
-                    if (accessToken.id != null) {
-                        res.cookie('access_token', accessToken.id, {
-                            signed: req.signedCookies ? true : false,
-                            maxAge: 1000 * accessToken.ttl
-                        });
-                        //return res.redirect('/');
-                    }
-                }
-                return next();
-            });
-        })(),
-
-
-
-
-
-
-
 
 
         //TODO MODIFY THIS METHOD TO CHANGE IT FROM THIS FUNCTION DYNAMICALLY
@@ -474,6 +449,33 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             Role.disableRemoteMethod('__get__accessTokens', false);
             Role.disableRemoteMethod('__updateById__accessTokens', false);
         };
+
+
+    //handle login hook add signed cookie to users..
+    (function () {
+        //Run this method only one time..
+        if(!server.userContext){
+            server.userContext = true;
+            // on login set access_token cookie with same ttl as loopback's accessToken
+            databaseObj.User.afterRemote('login', function setLoginCookie(context, accessToken, next) {
+                var res = context.res;
+                var req = context.req;
+                if (accessToken != null) {
+                    if (accessToken.id != null) {
+                        res.cookie('access_token', accessToken.id, {
+                            signed: req.signedCookies ? true : false,
+                            maxAge: 1000 * accessToken.ttl
+                        });
+                        //return res.redirect('/');
+                    }
+                }
+                return next();
+            });
+        }else{
+            //Dont add it again..
+        }
+
+    })();
 
 
     //Now return the methods that you want other plugins to use
