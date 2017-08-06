@@ -11,6 +11,12 @@ module.exports = function(server, databaseObj, helper, packageObj) {
 
         //Create an init method to be executed when the plugin get run for the first time..in memory..
         init = function() {
+            server.plugins = server.plugins || {};
+            if(server.plugins.login){
+                return false;
+            }else{
+                server.plugins.login = true;
+            }
             /**
              * Permission levels
              * ADMIN -> STATIC ROLE DECLARATION.

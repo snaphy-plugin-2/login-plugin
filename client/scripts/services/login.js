@@ -11,8 +11,8 @@ var LOGIN_EVENT       = $snaphy.loadSettings('login', "login_event_name");
 angular.module($snaphy.getModuleName())
     //Define your services here..
     //Service for implementing login related functionality..
-    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope', "$q", "$state",
-        function(Database, $location, LoopBackAuth, $injector, $rootScope, $q, $state) {
+    .factory('LoginServices', ['Database', '$location', 'LoopBackAuth', '$injector', '$rootScope', "$q", "$state", "$window",
+        function(Database, $location, LoopBackAuth, $injector, $rootScope, $q, $state, $window) {
             //Set redirect otherwise state name..
             //First use the value from the route/login global routeOtherWise value ....
             var redirectOtherWise_ = redirectOtherWise || 'dashboard';
@@ -108,24 +108,30 @@ angular.module($snaphy.getModuleName())
                             if(roles){
                                 resolve(roles);
                             }else{
-                                UserService.getAuthorisedRoles({}, {}, function (rolesList) {
-                                    if(rolesList){
-                                        if(rolesList.roles.length){
-                                            addUserDetail.setRoles(rolesList.roles);
-                                            resolve(rolesList.roles);
-                                        }else{
+                                //First check if database is present globally..
+                                var STATIC_DATA = $window.STATIC_DATA;
+                                if(STATIC_DATA.acl){
+                                    roles = STATIC_DATA.acl;
+                                }else{
+                                    UserService.getAuthorisedRoles({}, {}, function (rolesList) {
+                                        if(rolesList){
+                                            if(rolesList.roles.length){
+                                                addUserDetail.setRoles(rolesList.roles);
+                                                resolve(rolesList.roles);
+                                            }else{
+                                                addUserDetail.setRoles(null);
+                                                resolve(null);
+                                            }
+
+                                        }else {
                                             addUserDetail.setRoles(null);
                                             resolve(null);
                                         }
 
-                                    }else {
-                                        addUserDetail.setRoles(null);
-                                        resolve(null);
-                                    }
-
-                                }, function (err) {
-                                    reject(err);
-                                });
+                                    }, function (err) {
+                                        reject(err);
+                                    });
+                                }
                             }
                         })
                     },
