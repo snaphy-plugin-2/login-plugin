@@ -112,6 +112,7 @@ angular.module($snaphy.getModuleName())
                                 var STATIC_DATA = $window.STATIC_DATA;
                                 if(STATIC_DATA.acl){
                                     roles = STATIC_DATA.acl;
+                                    resolve(roles);
                                 }else{
                                     UserService.getAuthorisedRoles({}, {}, function (rolesList) {
                                         if(rolesList){
@@ -160,7 +161,7 @@ angular.module($snaphy.getModuleName())
                                                     }
                                                 }
                                                 addUserDetail.setAcl(aclListObj);
-                                                resolve(aclListObj)
+                                                resolve(aclListObj);
                                             }, function (error) {
                                                 reject(error);
                                             });
