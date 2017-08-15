@@ -18,7 +18,8 @@ var settings = {
   "forgotPassState": "forgotPass",
   "adminRole": 'admin',
   "employeeRole": "employee",
-  "logout_event_name": "LOGOUT_BROADCASE_NAME",
+"logout_event_name": "LOGOUT_EVENT",
+"login_event_name": "LOGIN_EVENT",
   //Accept username as login or email
   "accept":{
       "login": "username"
