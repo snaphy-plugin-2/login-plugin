@@ -413,6 +413,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                         cb(null, roles);
                     }
                 });
+            }else{
+                cb("Request is required");
             }
         },
 
