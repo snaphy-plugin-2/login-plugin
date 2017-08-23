@@ -374,6 +374,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         },
 
 
+
         /**
          * Get the roles of the current logged in users..
          * @param app
@@ -381,15 +382,15 @@ module.exports = function(server, databaseObj, helper, packageObj) {
          * @param cb {function(error, roles)}
          */
         getRoles = function(app, req, cb){
-            if(req){
-                if(req.accessToken){
-                    if(req.accessToken.userId){
+            if(req) {
+                var context;
+                if (req.accessToken) {
+                    if (req.accessToken.userId) {
                         Role = app.models.Role;
                         RoleMapping = app.models.RoleMapping;
                         //bad documentation loopback..
                         //http://stackoverflow.com/questions/28194961/is-it-possible-to-get-the-current-user-s-roles-accessible-in-a-remote-method-in
                         //https://github.com/strongloop/loopback/issues/332
-                        var context;
                         try {
                             context = {
                                 principalType: RoleMapping.USER,
@@ -403,26 +404,17 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                             };
                         }
 
-                        Role.getRoles(context, function(err, roles) {
-                            if(err){
-                                cb(err, null);
-                            }else{
-                                cb(null, roles);
-                            }
-                        });
-                    }else{
-                        cb(new Error("Request is required"));
                     }
-                }else{
-                    cb(new Error("Request is required"));
                 }
-            }else{
-                cb(new Error("Request is required"));
+                Role.getRoles(context, function(err, roles) {
+                    if(err){
+                        cb(err, null);
+                    }else{
+                        cb(null, roles);
+                    }
+                });
             }
-
         },
-
-
 
 
 
