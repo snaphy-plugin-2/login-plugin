@@ -110,28 +110,32 @@ angular.module($snaphy.getModuleName())
                             }else{
                                 //First check if database is present globally..
                                 var STATIC_DATA = $window.STATIC_DATA;
-                                if(STATIC_DATA.acl){
-                                    roles = STATIC_DATA.acl;
-                                    resolve(roles);
-                                }else{
-                                    UserService.getAuthorisedRoles({}, {}, function (rolesList) {
-                                        if(rolesList){
-                                            if(rolesList.roles.length){
-                                                addUserDetail.setRoles(rolesList.roles);
-                                                resolve(rolesList.roles);
-                                            }else{
+                                if(STATIC_DATA){
+                                    if(STATIC_DATA.acl){
+                                        roles = STATIC_DATA.acl;
+                                        resolve(roles);
+                                    }else{
+                                        UserService.getAuthorisedRoles({}, {}, function (rolesList) {
+                                            if(rolesList){
+                                                if(rolesList.roles.length){
+                                                    addUserDetail.setRoles(rolesList.roles);
+                                                    resolve(rolesList.roles);
+                                                }else{
+                                                    addUserDetail.setRoles(null);
+                                                    resolve(null);
+                                                }
+
+                                            }else {
                                                 addUserDetail.setRoles(null);
                                                 resolve(null);
                                             }
 
-                                        }else {
-                                            addUserDetail.setRoles(null);
-                                            resolve(null);
-                                        }
-
-                                    }, function (err) {
-                                        reject(err);
-                                    });
+                                        }, function (err) {
+                                            reject(err);
+                                        });
+                                    }
+                                }else{
+                                    resolve([]);
                                 }
                             }
                         })
