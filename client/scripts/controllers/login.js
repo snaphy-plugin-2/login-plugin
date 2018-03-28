@@ -11,6 +11,7 @@ angular.module($snaphy.getModuleName())
         $scope.loginState            =  $snaphy.loadSettings('login', "loginState");
         $scope.registerState         =  $snaphy.loadSettings('login', "registerState");
         $scope.forgotPassState       =  $snaphy.loadSettings('login', "forgotPassState");
+        var defaultUrl               =  $snaphy.loadSettings('login', "defaultUrl") || "/";
         //Will decide whether to ask email or username for login user..
         $scope.loginAccepts          =  $snaphy.loadSettings('login', "accept");
         $scope.validateForm          =  $snaphy.loadSettings('login', "validations");
@@ -42,7 +43,7 @@ angular.module($snaphy.getModuleName())
                     var $state = $injector.get('$state'),
                         redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
                     //Now reload the page after successfull login..
-                    window.location.replace("/");
+                    window.location.replace(defaultUrl);
                     //Redirect to the default State..
                     //$state.go(redirectTo);
                 })
