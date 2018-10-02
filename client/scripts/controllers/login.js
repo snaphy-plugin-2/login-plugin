@@ -42,9 +42,10 @@ angular.module($snaphy.getModuleName())
                     $scope.loginError = false;
                     var $state = $injector.get('$state'),
                         redirectTo =  $rootScope.previousState.name ?  $rootScope.previousState.name :  LoginServices.redirectOtherWise;
+                        console.log(window.location.pathname)
                     var pathName = window.location.pathname || defaultUrl;
                     //Now reload the page after successfull login..
-                    window.location.replace(defaultUrl);
+                    window.location.replace(pathName);
                     //Redirect to the default State..
                     //$state.go(redirectTo);
                 })
